@@ -15,22 +15,58 @@ export default function AddUserPage() {
     roles: [],
   });
   const [error, setError] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
   };
 
   const handleRolesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, roles: e.target.value.split(",").map((r) => r.trim()) }));
+    setTouched((prev) => ({ ...prev, roles: true }));
+  };
+
+  const getFieldError = (field: keyof typeof form): string | null => {
+    if (!touched[field]) return null;
+    if (field === "username" && (!form.username || form.username.length < 3)) {
+      return "Username must be at least 3 characters.";
+    }
+    if (field === "password" && (!form.password || form.password.length < 6)) {
+      return "Password must be at least 6 characters.";
+    }
+    if (
+      field === "email" &&
+      (!form.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email))
+    ) {
+      return "A valid email is required.";
+    }
+    return null;
+  };
+
+  const validate = (data: typeof form) => {
+    if (!data.username || data.username.length < 3) {
+      return "Username is required and must be at least 3 characters.";
+    }
+    if (!data.password || data.password.length < 6) {
+      return "Password is required and must be at least 6 characters.";
+    }
+    if (!data.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
+      return "A valid email is required.";
+    }
+    return null;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.username || !form.password || !form.email) {
-      setError("Username, password, and email are required.");
+    setTouched({ username: true, password: true, email: true });
+    const validationError = validate(form);
+    if (validationError) {
+      setError(validationError);
       return;
     }
+    setError("");
     // Here you would send the data to your backend or update state
     // For now, just redirect back to /users
     router.push("/users");
@@ -39,33 +75,45 @@ export default function AddUserPage() {
   return (
     <div className="max-w-md mx-auto p-8">
       <h1 className="text-2xl font-bold mb-6">Add New User</h1>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         <input
           name="username"
           value={form.username}
           onChange={handleChange}
+          onBlur={() => setTouched((prev) => ({ ...prev, username: true }))}
           placeholder="Username"
           className="border rounded px-3 py-2"
           required
         />
+        {getFieldError("username") && (
+          <div className="text-red-600 text-xs">{getFieldError("username")}</div>
+        )}
         <input
           name="password"
           type="password"
           value={form.password}
           onChange={handleChange}
+          onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
           placeholder="Password"
           className="border rounded px-3 py-2"
           required
         />
+        {getFieldError("password") && (
+          <div className="text-red-600 text-xs">{getFieldError("password")}</div>
+        )}
         <input
           name="email"
           type="email"
           value={form.email}
           onChange={handleChange}
+          onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
           placeholder="Email"
           className="border rounded px-3 py-2"
           required
         />
+        {getFieldError("email") && (
+          <div className="text-red-600 text-xs">{getFieldError("email")}</div>
+        )}
         <input
           name="displayName"
           value={form.displayName}
