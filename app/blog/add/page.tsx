@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BlogPost } from "@/types/blog-post";
+import { UserApiType } from "@/app/api/users/route";
 import { useRouter } from "next/navigation";
 
 export default function AddBlogPostPage() {
@@ -12,10 +13,28 @@ export default function AddBlogPostPage() {
     tags: [],
     coverImageUrl: "",
   });
+  const [users, setUsers] = useState<UserApiType[]>([]);
   const [error, setError] = useState("");
   const [touched, setTouched] = useState<Partial<Record<keyof typeof form, boolean>>>({});
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const res = await fetch("/api/users");
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const data = await res.json();
+        setUsers(data);
+      } catch {
+        setUsers([]);
+      } finally {
+        setLoadingUsers(false);
+      }
+    }
+    fetchUsers();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     setTouched((prev) => ({ ...prev, [name]: true }));
@@ -28,27 +47,27 @@ export default function AddBlogPostPage() {
 
   const getFieldError = (field: keyof typeof form): string | null => {
     if (!touched[field]) return null;
-    if (field === "title" && (!form.title || form.title.length < 3)) {
-      return "Title must be at least 3 characters.";
+    if (field === "title" && (!form.title || form.title.trim().length === 0)) {
+      return "Title is required.";
     }
-    if (field === "content" && (!form.content || form.content.length < 10)) {
-      return "Content must be at least 10 characters.";
+    if (field === "content" && (!form.content || form.content.length < 50)) {
+      return "Content must be at least 50 characters.";
     }
     if (field === "authorId" && !form.authorId) {
-      return "Author ID is required.";
+      return "Author is required.";
     }
     return null;
   };
 
   const validate = (data: typeof form) => {
-    if (!data.title || data.title.length < 3) {
-      return "Title is required and must be at least 3 characters.";
+    if (!data.title || data.title.trim().length === 0) {
+      return "Title is required.";
     }
-    if (!data.content || data.content.length < 10) {
-      return "Content is required and must be at least 10 characters.";
+    if (!data.content || data.content.length < 50) {
+      return "Content must be at least 50 characters.";
     }
     if (!data.authorId) {
-      return "Author ID is required.";
+      return "Author is required.";
     }
     return null;
   };
@@ -107,15 +126,22 @@ export default function AddBlogPostPage() {
         {getFieldError("content") && (
           <div className="text-red-600 text-xs">{getFieldError("content")}</div>
         )}
-        <input
+        <select
           name="authorId"
           value={form.authorId}
           onChange={handleChange}
           onBlur={() => setTouched((prev) => ({ ...prev, authorId: true }))}
-          placeholder="Author ID"
           className="border rounded px-3 py-2"
           required
-        />
+          disabled={loadingUsers}
+        >
+          <option value="">{loadingUsers ? "Loading users..." : "Select author"}</option>
+          {users.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.displayName || user.username}
+            </option>
+          ))}
+        </select>
         {getFieldError("authorId") && (
           <div className="text-red-600 text-xs">{getFieldError("authorId")}</div>
         )}
