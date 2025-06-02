@@ -1,31 +1,32 @@
-import { UserInterface } from "@/types/user-interface";
+"use client";
 
-const users: UserInterface[] = [
-  {
-    id: "1",
-    username: "johndoe",
-    password: "********",
-    email: "john@example.com",
-    displayName: "John Doe",
-    profileImageUrl: "https://randomuser.me/api/portraits/men/1.jpg",
-    roles: ["user"],
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2025-06-02"),
-  },
-  {
-    id: "2",
-    username: "janedoe",
-    password: "********",
-    email: "jane@example.com",
-    displayName: "Jane Doe",
-    profileImageUrl: "https://randomuser.me/api/portraits/women/2.jpg",
-    roles: ["admin"],
-    createdAt: new Date("2024-02-01"),
-    updatedAt: new Date("2025-06-02"),
-  },
-];
+import { useEffect, useState } from "react";
+import { UserApiType } from "@/app/api/users/route";
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<UserApiType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const res = await fetch("/api/users");
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const data = await res.json();
+        setUsers(data);
+      } catch (err) {
+        setError("Could not load users");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsers();
+  }, []);
+
+  if (loading) return <div className="p-8">Loading users...</div>;
+  if (error) return <div className="p-8 text-red-600">{error}</div>;
+
   return (
     <div className="max-w-2xl mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Users</h1>

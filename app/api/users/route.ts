@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { UserInterface } from "@/types/user-interface";
 
 export type UserApiType = Omit<UserInterface, 'createdAt' | 'updatedAt'> & {
@@ -33,11 +34,11 @@ let users: UserApiType[] = [
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-	return NextResponse.json(users);
+export async function GET(): Promise<ReturnType<typeof NextResponse.json<UserApiType[]>>> {
+	return NextResponse.json<UserApiType[]>(users);
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<ReturnType<typeof NextResponse.json<{ message: string; user: UserApiType }> | typeof NextResponse.json<{ error: string }>>> {
   try {
     const newUserRequestData = await request.json() as Omit<UserInterface, "id" | "createdAt" | "updatedAt">;
 
@@ -65,10 +66,10 @@ export async function POST(request: NextRequest) {
     console.log("New user added:", newUser);
     console.log("Current users in API memory:", users);
 
-    return NextResponse.json({ message: "User added successfully", user: newUser }, { status: 201 });
+    return NextResponse.json<{ message: string; user: UserApiType }>({ message: "User added successfully", user: newUser }, { status: 201 });
 
   } catch (error) {
     console.error("Error in POST /api/users:", error);
-    return NextResponse.json({ error: "Failed to create user. Please check server logs." }, { status: 500 });
+    return NextResponse.json<{ error: string }>({ error: "Failed to create user. Please check server logs." }, { status: 500 });
   }
 }
