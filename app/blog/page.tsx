@@ -54,32 +54,44 @@ export default function BlogListPage() {
       </div>
       <ul className="space-y-6">
         {posts.map((post) => (
-          <li key={post.id} className="border rounded-lg p-4 hover:shadow">
-            <Link
-              href={`/blog/${post.id}`}
-              className="text-xl font-bold hover:underline"
-            >
-              {post.title}
-            </Link>
-            <div className="text-gray-500 text-sm mt-1">
-              {getAuthorName(post.authorId)} &middot;{" "}
-              {new Date(post.createdAt).toLocaleString()}
+          <li key={post.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col sm:flex-row overflow-hidden">
+            <div className="sm:w-48 flex-shrink-0 h-40 sm:h-auto bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <img
+                src={post.coverImageUrl || "/file.svg"}
+                alt="Thumbnail"
+                className="object-cover w-full h-full"
+                style={{ maxHeight: "160px" }}
+              />
             </div>
-            {post.tags && post.tags.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {post.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-gray-200 text-xs px-2 py-1 rounded"
-                  >
-                    {tag}
-                  </span>
-                ))}
+            <div className="flex-1 p-4 flex flex-col justify-between">
+              <div>
+                <Link
+                  href={`/blog/${post.id}`}
+                  className="text-xl font-bold hover:underline"
+                >
+                  {post.title}
+                </Link>
+                <div className="text-gray-500 text-sm mt-1">
+                  {getAuthorName(post.authorId)} &middot;{" "}
+                  {new Date(post.createdAt).toLocaleString()}
+                </div>
+                {post.tags && post.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="bg-gray-200 text-xs px-2 py-1 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-2 text-gray-700 dark:text-gray-200 line-clamp-2">
+                  {post.content.slice(0, 120)}
+                  {post.content.length > 120 ? "..." : ""}
+                </div>
               </div>
-            )}
-            <div className="mt-2 text-gray-700 line-clamp-2">
-              {post.content.slice(0, 120)}
-              {post.content.length > 120 ? "..." : ""}
             </div>
           </li>
         ))}
