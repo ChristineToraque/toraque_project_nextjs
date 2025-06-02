@@ -58,7 +58,7 @@ export default function AddUserPage() {
     return null;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({ username: true, password: true, email: true });
     const validationError = validate(form);
@@ -67,9 +67,21 @@ export default function AddUserPage() {
       return;
     }
     setError("");
-    // Here you would send the data to your backend or update state
-    // For now, just redirect back to /users
-    router.push("/users");
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Failed to add user.");
+        return;
+      }
+      router.push("/users");
+    } catch (err) {
+      setError("Network error. Could not add user.");
+    }
   };
 
   return (
