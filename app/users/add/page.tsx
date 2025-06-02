@@ -14,10 +14,10 @@ export default function AddUserPage() {
     profileImageUrl: "",
     roles: [],
   });
-  const [error, setError] = useState("");
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState<string>("");
+  const [touched, setTouched] = useState<Partial<Record<keyof typeof form, boolean>>>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = <K extends keyof typeof form>(e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     setTouched((prev) => ({ ...prev, [name]: true }));
