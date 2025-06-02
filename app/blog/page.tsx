@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BlogPost } from "@/types/blog-post";
@@ -30,7 +32,9 @@ export default function BlogListPage() {
     <div className="max-w-2xl mx-auto p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Blog</h1>
-        <Link href="/blog/add" className="bg-blue-600 text-white rounded px-4 py-2 font-semibold hover:bg-blue-700 transition-colors">Add Post</Link>
+        <Link href="/blog/add" className="bg-blue-600 text-white rounded px-4 py-2 font-semibold hover:bg-blue-700 transition-colors">
+          Add Post
+        </Link>
       </div>
       <ul className="space-y-6">
         {posts.map((post) => (
@@ -38,15 +42,22 @@ export default function BlogListPage() {
             <Link href={`/blog/${post.id}`} className="text-xl font-bold hover:underline">
               {post.title}
             </Link>
-            <div className="text-gray-500 text-sm mt-1">{new Date(post.createdAt).toLocaleString()}</div>
+            <div className="text-gray-500 text-sm mt-1">
+              {new Date(post.createdAt).toLocaleString()}
+            </div>
             {post.tags && post.tags.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {post.tags.map((tag) => (
-                  <span key={tag} className="bg-gray-200 text-xs px-2 py-1 rounded">{tag}</span>
+                  <span key={tag} className="bg-gray-200 text-xs px-2 py-1 rounded">
+                    {tag}
+                  </span>
                 ))}
               </div>
             )}
-            <div className="mt-2 text-gray-700 line-clamp-2">{post.content.slice(0, 120)}{post.content.length > 120 ? "..." : ""}</div>
+            <div className="mt-2 text-gray-700 line-clamp-2">
+              {post.content.slice(0, 120)}
+              {post.content.length > 120 ? "..." : ""}
+            </div>
           </li>
         ))}
       </ul>
