@@ -59,6 +59,8 @@ export default function AddUserPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("submitting:");
+
     e.preventDefault();
     setTouched({ username: true, password: true, email: true });
     const validationError = validate(form);
@@ -73,6 +75,8 @@ export default function AddUserPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+      console.log("res:", res);
+
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || "Failed to add user.");
