@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UserApiType } from "@/app/api/users/route";
+import { Category } from "@/types/category";
 
 export default function AddBlogPage() {
   const [title, setTitle] = useState("");
@@ -13,10 +14,18 @@ export default function AddBlogPage() {
   const [users, setUsers] = useState<UserApiType[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const router = useRouter();
 
   useEffect(() => {
     fetch("/api/users").then((res) => res.json()).then(setUsers);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +48,7 @@ export default function AddBlogPage() {
       const res = await fetch("/api/blog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, authorId, coverImageUrl, tags }),
+        body: JSON.stringify({ title, content, authorId, coverImageUrl, tags, categoryId: selectedCategory }),
       });
       if (!res.ok) throw new Error("Failed to add blog post");
       router.push("/blog");
@@ -107,6 +116,22 @@ export default function AddBlogPage() {
               )
             }
           />
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Category</label>
+          <select
+            className="w-full"
+            value={selectedCategory}
+            onChange={e => setSelectedCategory(e.target.value)}
+            required
+          >
+            <option value="">Select category</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
         {error && (
           <div className="text-red-500 text-sm text-center">{error}</div>
