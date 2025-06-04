@@ -1,20 +1,21 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Category } from "@/types/Category";
 
 export default function AddCategoryPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!name.trim()) {
       setError("Category name is required.");
       return;
     }
-    setError("");
+    setLoading(true);
     try {
       const res = await fetch("/api/categories", {
         method: "POST",
@@ -22,31 +23,37 @@ export default function AddCategoryPage() {
         body: JSON.stringify({ name }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to add category.");
-        return;
+        throw new Error("Failed to add category");
       }
       router.push("/categories");
-    } catch {
-      setError("Network error. Could not add category.");
+    } catch (err) {
+      setError("Failed to add category");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Add Category</h1>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <input
-          name="name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="Category Name"
-          className="border rounded px-3 py-2"
-          required
-        />
-        {error && <div className="text-red-600 text-sm">{error}</div>}
-        <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2 font-semibold hover:bg-blue-700 transition-colors">
-          Add Category
+    <div className="max-w-md mx-auto card mt-10">
+      <h1 className="text-2xl font-bold mb-4 text-center">Add Category</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block mb-1 font-medium">Category Name</label>
+          <input
+            type="text"
+            className="w-full"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        {error && <div className="text-red-500 text-sm">{error}</div>}
+        <button
+          type="submit"
+          className="btn w-full"
+          disabled={loading}
+        >
+          {loading ? "Adding..." : "Add Category"}
         </button>
       </form>
     </div>

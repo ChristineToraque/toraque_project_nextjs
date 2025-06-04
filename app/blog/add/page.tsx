@@ -1,167 +1,122 @@
 "use client";
-import { useState, useEffect } from "react";
-import { BlogPost } from "@/types/blog-post";
-import { UserApiType } from "@/app/api/users/route";
-import { useRouter } from "next/navigation";
 
-export default function AddBlogPostPage() {
-  const router = useRouter();
-  const [form, setForm] = useState<Omit<BlogPost, "id" | "createdAt" | "updatedAt">>({
-    title: "",
-    content: "",
-    authorId: "",
-    tags: [],
-    coverImageUrl: "",
-  });
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { UserApiType } from "@/app/api/users/route";
+
+export default function AddBlogPage() {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [authorId, setAuthorId] = useState("");
+  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [users, setUsers] = useState<UserApiType[]>([]);
   const [error, setError] = useState("");
-  const [touched, setTouched] = useState<Partial<Record<keyof typeof form, boolean>>>({});
-  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const res = await fetch("/api/users");
-        if (!res.ok) throw new Error("Failed to fetch users");
-        const data = await res.json();
-        setUsers(data);
-      } catch {
-        setUsers([]);
-      } finally {
-        setLoadingUsers(false);
-      }
-    }
-    fetchUsers();
+    fetch("/api/users").then((res) => res.json()).then(setUsers);
   }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setTouched((prev) => ({ ...prev, [name]: true }));
-  };
-
-  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, tags: e.target.value.split(",").map((t) => t.trim()) }));
-    setTouched((prev) => ({ ...prev, tags: true }));
-  };
-
-  const getFieldError = (field: keyof typeof form): string | null => {
-    if (!touched[field]) return null;
-    if (field === "title" && (!form.title || form.title.trim().length === 0)) {
-      return "Title is required.";
-    }
-    if (field === "content" && (!form.content || form.content.length < 50)) {
-      return "Content must be at least 50 characters.";
-    }
-    if (field === "authorId" && !form.authorId) {
-      return "Author is required.";
-    }
-    return null;
-  };
-
-  const validate = (data: typeof form) => {
-    if (!data.title || data.title.trim().length === 0) {
-      return "Title is required.";
-    }
-    if (!data.content || data.content.length < 50) {
-      return "Content must be at least 50 characters.";
-    }
-    if (!data.authorId) {
-      return "Author is required.";
-    }
-    return null;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched({ title: true, content: true, authorId: true });
-    const validationError = validate(form);
-    if (validationError) {
-      setError(validationError);
+    setError("");
+    if (!title.trim()) {
+      setError("Title is required.");
       return;
     }
-    setError("");
+    if (content.trim().length < 50) {
+      setError("Content must be at least 50 characters.");
+      return;
+    }
+    if (!authorId) {
+      setError("Author is required.");
+      return;
+    }
+    setLoading(true);
     try {
       const res = await fetch("/api/blog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ title, content, authorId, coverImageUrl, tags }),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to add blog post.");
-        return;
-      }
+      if (!res.ok) throw new Error("Failed to add blog post");
       router.push("/blog");
-    } catch (err) {
-      setError("Network error. Could not add blog post.");
+    } catch {
+      setError("Failed to add blog post");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Add Blog Post</h1>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-        <input
-          name="title"
-          value={form.title}
-          onChange={handleChange}
-          onBlur={() => setTouched((prev) => ({ ...prev, title: true }))}
-          placeholder="Title"
-          className="border rounded px-3 py-2"
-          required
-        />
-        {getFieldError("title") && (
-          <div className="text-red-600 text-xs">{getFieldError("title")}</div>
+    <div className="max-w-xl mx-auto card mt-8">
+      <h1 className="text-2xl font-bold mb-6 text-center">Add Blog Post</h1>
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <div>
+          <label className="block mb-1 font-medium">Title</label>
+          <input
+            className="w-full"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Content</label>
+          <textarea
+            className="w-full min-h-[120px]"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Author</label>
+          <select
+            className="w-full"
+            value={authorId}
+            onChange={(e) => setAuthorId(e.target.value)}
+            required
+          >
+            <option value="">Select author</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.displayName || u.username}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Cover Image URL</label>
+          <input
+            className="w-full"
+            value={coverImageUrl}
+            onChange={(e) => setCoverImageUrl(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Tags (comma separated)</label>
+          <input
+            className="w-full"
+            value={tags.join(", ")}
+            onChange={(e) =>
+              setTags(
+                e.target.value.split(",").map((t) => t.trim()).filter(Boolean)
+              )
+            }
+          />
+        </div>
+        {error && (
+          <div className="text-red-500 text-sm text-center">{error}</div>
         )}
-        <textarea
-          name="content"
-          value={form.content}
-          onChange={handleChange}
-          onBlur={() => setTouched((prev) => ({ ...prev, content: true }))}
-          placeholder="Content"
-          className="border rounded px-3 py-2 min-h-[120px]"
-          required
-        />
-        {getFieldError("content") && (
-          <div className="text-red-600 text-xs">{getFieldError("content")}</div>
-        )}
-        <select
-          name="authorId"
-          value={form.authorId}
-          onChange={handleChange}
-          onBlur={() => setTouched((prev) => ({ ...prev, authorId: true }))}
-          className="border rounded px-3 py-2"
-          required
-          disabled={loadingUsers}
+        <button
+          type="submit"
+          className="btn w-full mt-2"
+          disabled={loading}
         >
-          <option value="">{loadingUsers ? "Loading users..." : "Select author"}</option>
-          {users.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.displayName || user.username}
-            </option>
-          ))}
-        </select>
-        {getFieldError("authorId") && (
-          <div className="text-red-600 text-xs">{getFieldError("authorId")}</div>
-        )}
-        <input
-          name="tags"
-          value={form.tags?.join(", ")}
-          onChange={handleTagsChange}
-          placeholder="Tags (comma separated, optional)"
-          className="border rounded px-3 py-2"
-        />
-        <input
-          name="coverImageUrl"
-          value={form.coverImageUrl}
-          onChange={handleChange}
-          placeholder="Cover Image URL (optional)"
-          className="border rounded px-3 py-2"
-        />
-        {error && <div className="text-red-600 text-sm">{error}</div>}
-        <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2 font-semibold hover:bg-blue-700 transition-colors">
-          Add Post
+          {loading ? "Adding..." : "Add Post"}
         </button>
       </form>
     </div>

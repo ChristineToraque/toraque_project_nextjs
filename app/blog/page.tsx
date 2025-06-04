@@ -42,60 +42,55 @@ export default function BlogListPage() {
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Blog</h1>
-        <Link
-          href="/blog/add"
-          className="bg-blue-600 text-white rounded px-4 py-2 font-semibold hover:bg-blue-700 transition-colors"
-        >
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-extrabold text-gray-900">Blog</h1>
+        <Link href="/blog/add" className="btn">
           Add Post
         </Link>
       </div>
-      <ul className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
         {posts.map((post) => (
-          <li key={post.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col sm:flex-row overflow-hidden">
-            <div className="sm:w-48 flex-shrink-0 h-40 sm:h-auto bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+          <Link
+            key={post.id}
+            href={`/blog/${post.id}`}
+            className="card flex flex-col gap-3 hover:shadow-xl transition-shadow"
+          >
+            {post.coverImageUrl ? (
               <img
-                src={post.coverImageUrl || "/file.svg"}
-                alt="Thumbnail"
-                className="object-cover w-full h-full"
-                style={{ maxHeight: "160px" }}
+                src={post.coverImageUrl}
+                alt="cover"
+                className="w-full h-40 object-cover rounded-lg mb-2"
               />
-            </div>
-            <div className="flex-1 p-4 flex flex-col justify-between">
-              <div>
-                <Link
-                  href={`/blog/${post.id}`}
-                  className="text-xl font-bold hover:underline"
-                >
-                  {post.title}
-                </Link>
-                <div className="text-gray-500 text-sm mt-1">
-                  {getAuthorName(post.authorId)} &middot;{" "}
-                  {new Date(post.createdAt).toLocaleString()}
-                </div>
-                {post.tags && post.tags.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {post.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="bg-gray-200 text-xs px-2 py-1 rounded"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <div className="mt-2 text-gray-700 dark:text-gray-200 line-clamp-2">
-                  {post.content.slice(0, 120)}
-                  {post.content.length > 120 ? "..." : ""}
-                </div>
+            ) : (
+              <div className="w-full h-40 bg-indigo-100 rounded-lg mb-2 flex items-center justify-center text-indigo-400 text-4xl font-bold">
+                📝
               </div>
+            )}
+            <h2 className="text-xl font-bold text-gray-900 mb-1">
+              {post.title}
+            </h2>
+            <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+              <span>By {getAuthorName(post.authorId)}</span>
+              <span>·</span>
+              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
             </div>
-          </li>
+            <div className="flex gap-2 flex-wrap">
+              {(post.tags || []).map((tag) => (
+                <span
+                  key={tag}
+                  className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs font-semibold"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <div className="text-gray-600 text-sm line-clamp-3">
+              {post.content.slice(0, 100)}...
+            </div>
+          </Link>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

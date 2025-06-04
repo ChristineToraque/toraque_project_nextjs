@@ -59,102 +59,96 @@ export default function AddUserPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("submitting:");
-
     e.preventDefault();
-    setTouched({ username: true, password: true, email: true });
+    setError("");
     const validationError = validate(form);
     if (validationError) {
       setError(validationError);
       return;
     }
-    setError("");
     try {
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      console.log("res:", res);
-
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to add user.");
-        return;
+        throw new Error("Failed to add user");
       }
       router.push("/users");
     } catch (err) {
-      setError("Network error. Could not add user.");
+      setError("Failed to add user");
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Add New User</h1>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-        <input
-          name="username"
-          value={form.username}
-          onChange={handleChange}
-          onBlur={() => setTouched((prev) => ({ ...prev, username: true }))}
-          placeholder="Username"
-          className="border rounded px-3 py-2"
-          required
-        />
-        {getFieldError("username") && (
-          <div className="text-red-600 text-xs">{getFieldError("username")}</div>
-        )}
-        <input
-          name="password"
-          type="password"
-          value={form.password}
-          onChange={handleChange}
-          onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
-          placeholder="Password"
-          className="border rounded px-3 py-2"
-          required
-        />
-        {getFieldError("password") && (
-          <div className="text-red-600 text-xs">{getFieldError("password")}</div>
-        )}
-        <input
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
-          placeholder="Email"
-          className="border rounded px-3 py-2"
-          required
-        />
-        {getFieldError("email") && (
-          <div className="text-red-600 text-xs">{getFieldError("email")}</div>
-        )}
-        <input
-          name="displayName"
-          value={form.displayName}
-          onChange={handleChange}
-          placeholder="Display Name (optional)"
-          className="border rounded px-3 py-2"
-        />
-        <input
-          name="profileImageUrl"
-          value={form.profileImageUrl}
-          onChange={handleChange}
-          placeholder="Profile Image URL (optional)"
-          className="border rounded px-3 py-2"
-        />
-        <input
-          name="roles"
-          value={form.roles?.join(", ")}
-          onChange={handleRolesChange}
-          placeholder="Roles (comma separated, optional)"
-          className="border rounded px-3 py-2"
-        />
-        {error && <div className="text-red-600 text-sm">{error}</div>}
-        <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2 font-semibold hover:bg-blue-700 transition-colors">
-          Add User
-        </button>
+    <div className="max-w-lg mx-auto card mt-8">
+      <h1 className="text-2xl font-bold mb-6 text-center">Add User</h1>
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <div>
+          <label className="block mb-1 font-medium">Username</label>
+          <input
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            className="w-full"
+            required
+          />
+          {getFieldError("username") && <div className="text-red-500 text-xs mt-1">{getFieldError("username")}</div>}
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Password</label>
+          <input
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            className="w-full"
+            required
+          />
+          {getFieldError("password") && <div className="text-red-500 text-xs mt-1">{getFieldError("password")}</div>}
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Email</label>
+          <input
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            className="w-full"
+            required
+          />
+          {getFieldError("email") && <div className="text-red-500 text-xs mt-1">{getFieldError("email")}</div>}
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Display Name</label>
+          <input
+            name="displayName"
+            value={form.displayName}
+            onChange={handleChange}
+            className="w-full"
+          />
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Profile Image URL</label>
+          <input
+            name="profileImageUrl"
+            value={form.profileImageUrl}
+            onChange={handleChange}
+            className="w-full"
+          />
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Roles (comma separated)</label>
+          <input
+            name="roles"
+            value={(form.roles || []).join(", ")}
+            onChange={handleRolesChange}
+            className="w-full"
+          />
+        </div>
+        {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+        <button type="submit" className="btn w-full mt-2">Add User</button>
       </form>
     </div>
   );

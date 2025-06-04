@@ -1,45 +1,53 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Category } from "@/types/Category";
-import Link from "next/link";
 
-export default function CategoriesListPage() {
+interface Category {
+  id: string;
+  name: string;
+}
+
+export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function fetchCategories() {
+    const fetchCategories = async () => {
       try {
         const res = await fetch("/api/categories");
         if (!res.ok) throw new Error("Failed to fetch categories");
         const data = await res.json();
         setCategories(data);
-      } catch {
-        setError("Could not load categories");
+      } catch (err) {
+        setError("Failed to load categories");
       } finally {
         setLoading(false);
       }
-    }
+    };
     fetchCategories();
   }, []);
 
-  if (loading) return <div className="p-8">Loading categories...</div>;
-  if (error) return <div className="p-8 text-red-600">{error}</div>;
-
   return (
-    <div className="max-w-md mx-auto p-8">
+    <div className="max-w-2xl mx-auto card mt-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Categories</h1>
-        <Link href="/categories/add" className="bg-blue-600 text-white rounded px-4 py-2 font-semibold hover:bg-blue-700 transition-colors">Add Category</Link>
+        <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
+        <a href="/categories/add" className="btn">Add Category</a>
       </div>
-      <ul className="space-y-4">
-        {categories.map((cat) => (
-          <li key={cat.id} className="border rounded-lg p-4 bg-white dark:bg-gray-800">
-            <span className="font-semibold text-lg">{cat.name}</span>
-          </li>
-        ))}
-      </ul>
+      {loading ? (
+        <div>Loading...</div>
+      ) : error ? (
+        <div className="text-red-500">{error}</div>
+      ) : categories.length === 0 ? (
+        <div>No categories found.</div>
+      ) : (
+        <ul className="divide-y divide-gray-200">
+          {categories.map(cat => (
+            <li key={cat.id} className="py-3 flex items-center justify-between">
+              <span className="font-medium text-gray-800">{cat.name}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
