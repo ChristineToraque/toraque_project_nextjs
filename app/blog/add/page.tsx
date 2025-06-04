@@ -44,11 +44,21 @@ export default function AddBlogPage() {
       return;
     }
     setLoading(true);
+
+    const payload = {
+      title,
+      content,
+      authorId,
+      coverImageUrl,
+      tags,
+      categoryId: selectedCategory
+    };
+
     try {
       const res = await fetch("/api/blog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, authorId, coverImageUrl, tags, categoryId: selectedCategory }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Failed to add blog post");
       router.push("/blog");

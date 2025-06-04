@@ -3,8 +3,9 @@ export interface BlogPost {
   title: string;
   content: string;
   authorId: string;
-  createdAt: string; // ISO string for consistency with API
-  updatedAt: string; // ISO string for consistency with API
+  createdAt: string;
+  updatedAt: string;
   tags?: string[];
   coverImageUrl?: string;
+  categoryId?: string;
 }
