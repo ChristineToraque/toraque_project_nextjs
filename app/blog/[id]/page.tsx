@@ -1,33 +1,54 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { BlogPost } from "@/types/blog-post";
+import { UserApiType } from "@/app/api/users/route";
+import { Category } from "@/types/category";
 import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 
-const posts: BlogPost[] = [
-	{
-		id: "1",
-		title: "Welcome to the Blog!",
-		content: "This is the first post. Edit or add more posts to get started.",
-		authorId: "1",
-		createdAt: "2025-06-02T00:00:00.000Z",
-		updatedAt: "2025-06-02T00:00:00.000Z",
-		tags: ["welcome", "intro"],
-		coverImageUrl: "",
-	},
-];
+export default function BlogDetailPage() {
+	const params = useParams<{ id: string }>();
+	const [post, setPost] = useState<BlogPost | null>(null);
+	const [users, setUsers] = useState<UserApiType[]>([]);
+	const [categories, setCategories] = useState<Category[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState("");
 
-const users: { id: string; username: string; displayName?: string }[] = [
-];
+	useEffect(() => {
+		async function fetchData() {
+			try {
+				const [postsRes, usersRes, categoriesRes] = await Promise.all([
+					fetch("/api/blog"),
+					fetch("/api/users"),
+					fetch("/api/categories"),
+				]);
+				if (!postsRes.ok) throw new Error("Failed to fetch blog posts");
+				if (!usersRes.ok) throw new Error("Failed to fetch users");
+				if (!categoriesRes.ok) throw new Error("Failed to fetch categories");
+				const postsData: BlogPost[] = await postsRes.json();
+				const usersData: UserApiType[] = await usersRes.json();
+				const categoriesData: Category[] = await categoriesRes.json();
+				const foundPost = postsData.find((p) => p.id === params.id);
+				setPost(foundPost || null);
+				setUsers(usersData);
+				setCategories(categoriesData);
+			} catch (err) {
+				setError("Could not load blog post or users");
+			} finally {
+				setLoading(false);
+			}
+		}
+		if (params?.id) fetchData();
+	}, [params?.id]);
 
-function getAuthorName(authorId: string) {
-	const user = users.find((u) => u.id === authorId);
-	return user ? user.displayName || user.username : authorId;
-}
+	function getAuthorName(authorId: string) {
+		const user = users.find((u) => u.id === authorId);
+		return user ? user.displayName || user.username : "Unknown";
+	}
 
-interface BlogDetailPageProps {
-	params: { id: string };
-}
-
-export default function BlogDetailPage({ params }: BlogDetailPageProps) {
-	const post = posts.find((p) => p.id === params.id);
+	if (loading) return <div className="p-8">Loading blog post...</div>;
+	if (error) return <div className="p-8 text-red-600">{error}</div>;
 	if (!post) return notFound();
 
 	return (
