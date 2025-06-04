@@ -46,6 +46,12 @@ export default function BlogDetailPage() {
 		if (params?.id) fetchData();
 	}, [params?.id]);
 
+	useEffect(() => {
+		// Load comments from localStorage
+		const stored = localStorage.getItem("comments");
+		if (stored) setComments(JSON.parse(stored));
+	}, [params?.id]);
+
 	function getAuthorName(authorId: string) {
 		const user = users.find((u) => u.id === authorId);
 		return user ? user.displayName || user.username : "Unknown";
@@ -54,7 +60,7 @@ export default function BlogDetailPage() {
 	function handleAddComment(e: React.FormEvent) {
 		e.preventDefault();
 		if (!selectedUserId || !post || !commentContent.trim()) return;
-		setComments([
+		const newComments = [
 			...comments,
 			{
 				postId: post.id,
@@ -62,7 +68,9 @@ export default function BlogDetailPage() {
 				content: commentContent,
 				createdAt: new Date().toISOString(),
 			},
-		]);
+		];
+		setComments(newComments);
+		localStorage.setItem("comments", JSON.stringify(newComments));
 		setCommentContent("");
 		if (commentFormRef.current) commentFormRef.current.reset();
 	}

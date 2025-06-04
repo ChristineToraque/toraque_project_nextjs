@@ -33,12 +33,16 @@ export default function AddCommentPage() {
       }
     }
     fetchData();
+
+    // Load comments from localStorage
+    const stored = localStorage.getItem("comments");
+    if (stored) setComments(JSON.parse(stored));
   }, []);
 
   function handleAddComment(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedUserId || !selectedPostId || !commentContent.trim()) return;
-    setComments([
+    const newComments = [
       ...comments,
       {
         postId: selectedPostId,
@@ -46,7 +50,9 @@ export default function AddCommentPage() {
         content: commentContent,
         createdAt: new Date().toISOString(),
       },
-    ]);
+    ];
+    setComments(newComments);
+    localStorage.setItem("comments", JSON.stringify(newComments));
     setCommentContent("");
     if (commentFormRef.current) commentFormRef.current.reset();
   }
